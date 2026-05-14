@@ -1,780 +1,902 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Flip7 Score Keeper</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Flip7 Score Keeper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0f0f11;--surface:#1a1a1f;--surface2:#242429;--surface3:#2e2e35;
+  --border:#3a3a44;--text:#f0eff6;--muted:#8a8a99;
+  --accent:#e85d4a;--accent2:#4ade80;--gold:#f5c842;--blue:#60a5fa;--purple:#a78bfa;
+  --radius:12px;--radius-sm:8px;
+}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;touch-action:manipulation;overscroll-behavior:none}
+.app{max-width:520px;margin:0 auto;padding:16px;padding-bottom:48px}
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: white;
-            touch-action: manipulation;
-        }
+.header{text-align:center;padding:20px 0 24px;position:relative}
+.header h1{font-size:2.8rem;font-weight:800;letter-spacing:-1px;line-height:1}
+.header h1 span{color:var(--accent)}
+.header-sub{color:var(--muted);font-size:.85rem;margin-top:5px;font-family:'DM Mono',monospace}
+.header-btns{position:absolute;right:0;top:20px;display:flex;gap:8px}
 
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.card-title{font-size:.8rem;font-weight:700;margin-bottom:14px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
 
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+input[type=text],input[type=number]{padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Syne',sans-serif;font-size:15px;outline:none}
+input[type=text]:focus,input[type=number]:focus{border-color:var(--accent)}
+input[type=text]::placeholder{color:var(--muted)}
+input[type=number]{-moz-appearance:textfield;width:90px;text-align:center}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:12px 18px;border:none;border-radius:var(--radius-sm);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;min-height:44px;white-space:nowrap}
+.btn:active{transform:scale(.95)}
+.btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{background:#d64d3a}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn-ghost:hover{background:var(--surface3)}
+.btn-green{background:var(--accent2);color:#0a1f0a}
+.btn-full{width:100%}
+.btn-sm{padding:8px 13px;font-size:13px;min-height:34px}
 
-        .header p {
-            opacity: 0.9;
-            font-size: 1.1rem;
-        }
+.player-row{display:flex;align-items:center;gap:8px;padding:11px 14px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:8px;border:1px solid var(--border)}
+.player-row-name{font-weight:700;flex:1}
+.order-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:2px 5px;line-height:1;border-radius:3px}
+.order-btn:hover{color:var(--text);background:var(--surface3)}
 
-        .section {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        }
+.scoreboard{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:10px;margin-bottom:16px}
+.score-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:13px 10px 10px;text-align:center;cursor:pointer;transition:all .2s;position:relative;user-select:none;min-height:110px}
+.score-card:active{transform:scale(.96)}
+.score-card.selectable:hover{border-color:var(--accent);background:var(--surface3)}
+.score-card.scored{border-color:var(--accent2);opacity:.6;cursor:default}
+.score-card.scored:active,.score-card.frozen:active{transform:none}
+.score-card.frozen{border-color:var(--blue);opacity:.6;cursor:default}
+.score-card.leader{border-color:var(--gold)}
+.score-card.winner-card{border-color:var(--gold);background:#1c1800;cursor:default}
+.sc-name{font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sc-score{font-size:1.85rem;font-weight:800;font-family:'DM Mono',monospace;color:var(--text);line-height:1}
+.sc-need{font-size:.7rem;color:var(--muted);margin-top:3px;font-family:'DM Mono',monospace}
+.sc-need.close{color:#f97316}
+.sc-sparkline{margin-top:5px;height:22px;width:100%}
+.score-card.winner-card .sc-score{color:var(--gold)}
+.sc-badge{position:absolute;top:5px;right:5px;font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px;font-family:'DM Mono',monospace}
+.badge-done{background:#1a3a20;color:var(--accent2)}
+.badge-frozen{background:#1a2a3a;color:var(--blue)}
+.badge-winner{background:#3a2a00;color:var(--gold)}
+.badge-lead{background:#2a2200;color:var(--gold)}
+.bust-pips{margin-top:3px}
+.bust-pip{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--accent);margin:0 1px}
 
-        .section h2 {
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-            text-align: center;
-        }
+.round-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.round-pill{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 13px;font-size:.82rem;font-weight:700;font-family:'DM Mono',monospace;color:var(--muted)}
+.progress-wrap{margin-bottom:14px}
+.progress-bar{height:4px;background:var(--surface3);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s ease}
+.progress-labels{display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);font-family:'DM Mono',monospace;margin-top:3px}
 
-        .input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+.sheet-player{font-size:1.05rem;font-weight:800;color:var(--accent);margin-bottom:14px}
+.section-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:7px}
+.card-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:14px}
+.num-card{aspect-ratio:1;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;font-weight:500;cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center}
+.num-card:active{transform:scale(.88)}
+.num-card.selected{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
 
-        input[type="text"] {
-            flex: 1;
-            padding: 15px;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
-        }
+.mod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+.mod-btn{padding:9px 6px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;font-weight:500;cursor:pointer;transition:all .12s;text-align:center;line-height:1.3}
+.mod-btn:active{transform:scale(.94)}
+.mod-btn.selected{border-color:var(--purple);background:#1e1a2e;color:var(--purple)}
+.mod-btn.action-selected{border-color:var(--blue);background:#1a1e2e;color:var(--blue)}
 
-        .btn {
-            padding: 15px 25px;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-height: 50px;
-        }
+.score-display{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;text-align:center;margin-bottom:14px}
+.score-big{font-size:2.1rem;font-weight:800;font-family:'DM Mono',monospace;color:var(--gold);line-height:1}
+.score-sub{font-size:.76rem;color:var(--muted);margin-top:4px;line-height:1.4}
+.score-new-total{font-size:.82rem;color:var(--text);margin-top:5px;font-family:'DM Mono',monospace}
 
-        .btn-primary {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-        }
+.sheet-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:8px}
+.sc-banner{background:#1a1e2e;border:1px solid var(--blue);border-radius:var(--radius-sm);padding:9px 13px;font-size:.82rem;color:var(--blue);margin-bottom:12px}
 
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-        }
+.game-controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 
-        .btn:active {
-            transform: scale(0.95);
-        }
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+.modal-backdrop.hidden{display:none}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px 22px;max-width:400px;width:100%;text-align:center}
+.modal h2{font-size:1.3rem;font-weight:800;margin-bottom:8px}
+.modal p{color:var(--muted);margin-bottom:20px;font-size:.88rem;line-height:1.5}
+.modal-btns{display:flex;flex-direction:column;gap:9px}
 
-        .scoreboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
+.history-table{width:100%;border-collapse:collapse;font-family:'DM Mono',monospace;font-size:12px}
+.history-table th{padding:7px 8px;text-align:center;color:var(--muted);font-size:.7rem;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.history-table td{padding:7px 8px;text-align:center;border-bottom:1px solid var(--surface3)}
+.history-table .total-row td{font-weight:700;color:var(--gold);border-top:1px solid var(--border);border-bottom:none}
 
-        .player-score-card {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 15px;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center}
+.stat-val{font-size:1.5rem;font-weight:800;font-family:'DM Mono',monospace}
+.stat-label{font-size:.7rem;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.06em}
+.player-stats-row{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px}
+.psr-name{font-weight:700;margin-bottom:8px}
+.psr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;text-align:center}
+.psr-val{font-size:1.1rem;font-weight:700;font-family:'DM Mono',monospace}
+.psr-lbl{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
 
-        .player-score-card:hover,
-        .player-score-card.active {
-            background: rgba(255, 255, 255, 0.25);
-            border-color: rgba(255, 255, 255, 0.5);
-            transform: translateY(-2px);
-        }
+.win-screen{text-align:center;padding:24px 0}
+.win-trophy{font-size:3.5rem;margin-bottom:12px}
+.win-name{font-size:2rem;font-weight:800;color:var(--gold);margin-bottom:4px}
+.win-meta{font-size:.88rem;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:18px}
+.final-scores{display:flex;flex-direction:column;gap:8px;margin-bottom:22px;text-align:left}
+.final-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border)}
+.final-row.first{border-color:var(--gold)}
+.final-rank{font-size:.85rem;color:var(--muted);font-family:'DM Mono',monospace;min-width:26px}
+.final-name{font-weight:700;flex:1}
+.final-score{font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)}
 
-        .player-score-card.winner {
-            background: linear-gradient(45deg, #ffd700, #ffed4a);
-            color: #333;
-        }
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface3);border:1px solid var(--border);border-radius:24px;padding:9px 18px;font-size:.88rem;font-weight:700;z-index:300;transition:transform .25s ease;pointer-events:none;white-space:nowrap;max-width:88vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
 
-        .player-name-small {
-            font-size: 1rem;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{flex:1;padding:8px;text-align:center;border-radius:var(--radius-sm);font-size:.82rem;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .15s}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-        .player-total-small {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #ffd700;
-        }
+.input-row{display:flex;gap:9px;margin-bottom:14px}
+.input-row input[type=text]{flex:1}
 
-        .player-score-card.winner .player-total-small {
-            color: #333;
-        }
+.freeze-target-list{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.freeze-target{padding:12px 15px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-weight:700;transition:all .15s}
+.freeze-target:hover{border-color:var(--blue);background:var(--surface3)}
 
-        .player-score-card.scored {
-            border-color: #4caf50;
-        }
+.win-target-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:0}
+.preset-btns{display:flex;gap:6px;flex-wrap:wrap}
+.preset-btn{padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:.8rem;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s}
+.preset-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-        .round-info {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
+.score-edit-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--surface3)}
+.score-edit-row:last-child{border-bottom:none}
+.score-edit-name{font-weight:700}
 
-        .scoring-sheet {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .scoring-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .close-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .card-selector {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-
-        .card-btn {
-            aspect-ratio: 1;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
-        }
-
-        .card-btn.selected {
-            background: #ff6b6b;
-            color: white;
-            transform: scale(0.95);
-        }
-
-        .modifier-section {
-            margin-top: 15px;
-        }
-
-        .modifier-buttons {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .modifier-btn {
-            padding: 8px;
-            border: none;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            background: rgba(255, 255, 255, 0.8);
-            color: #333;
-            transition: all 0.2s ease;
-        }
-
-        .modifier-btn.selected {
-            background: #4ecdc4;
-            color: white;
-        }
-
-        .current-score {
-            text-align: center;
-            margin: 15px 0;
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: #ffd700;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-        }
-
-        .unique-count {
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        .score-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .next-round-animation {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-            padding: 30px 50px;
-            border-radius: 20px;
-            font-size: 2rem;
-            font-weight: bold;
-            z-index: 1000;
-            animation: nextRoundPulse 1.5s ease-in-out;
-            pointer-events: none;
-        }
-
-        @keyframes nextRoundPulse {
-            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
-        }
-
-        .game-controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .next-round-btn {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .next-round-btn::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            transition: left 0.5s;
-        }
-
-        .next-round-btn.animating::after {
-            left: 100%;
-        }
-
-        .confirmation-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .confirmation-overlay.hidden {
-            display: none !important;
-        }
-
-        .confirmation-dialog {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-            color: white;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-
-        .confirmation-dialog h3 {
-            margin-bottom: 20px;
-            font-size: 1.3rem;
-        }
-
-        .confirmation-dialog p {
-            margin-bottom: 25px;
-            opacity: 0.9;
-        }
-
-        .confirmation-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
-        }
-
-        @media (max-width: 480px) {
-            .container { padding: 15px; }
-            .header h1 { font-size: 2rem; }
-            .section { padding: 20px; }
-            .scoreboard { grid-template-columns: repeat(2, 1fr); }
-            .modifier-buttons { grid-template-columns: repeat(2, 1fr); }
-            .confirmation-buttons { grid-template-columns: 1fr; }
-        }
-    </style>
+.hidden{display:none!important}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🎯 Flip7</h1>
-            <p>Score Keeper</p>
-        </div>
+<div class="app">
+  <div class="header">
+    <div class="header-btns">
+      <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" id="theme-btn">☀</button>
+    </div>
+    <h1>FLIP<span>7</span></h1>
+    <div class="header-sub">score keeper</div>
+  </div>
 
-        <div id="setup-section" class="section">
-            <h2>Add Players</h2>
-            <div class="input-group">
-                <input type="text" id="player-name" placeholder="Enter player name" maxlength="15">
-                <button class="btn btn-primary" onclick="addPlayer()">Add</button>
-            </div>
-            <div id="players-setup"></div>
-            <button id="start-game" class="btn btn-secondary" onclick="startGame()" style="width: 100%; margin-top: 20px;">Start Game</button>
+  <!-- ══ SETUP ══ -->
+  <div id="setup-section">
+    <div class="card">
+      <div class="card-title">Win Target</div>
+      <div class="win-target-row">
+        <label style="font-size:.9rem;color:var(--muted);white-space:nowrap">First to:</label>
+        <input type="number" id="win-target-input" value="200" min="50" max="9999" onchange="updateWinTarget()">
+        <div class="preset-btns">
+          <button class="preset-btn" onclick="setWinTarget(100)">100</button>
+          <button class="preset-btn active" onclick="setWinTarget(200)">200</button>
+          <button class="preset-btn" onclick="setWinTarget(300)">300</button>
+          <button class="preset-btn" onclick="setWinTarget(500)">500</button>
         </div>
-
-        <div id="game-section" class="section hidden">
-            <div class="round-info">
-                Round <span id="current-round">1</span>
-            </div>
-            
-            <div class="scoreboard" id="scoreboard"></div>
-            
-            <div id="scoring-sheet" class="scoring-sheet hidden">
-                <div class="scoring-header">
-                    <h3 id="scoring-player-name">Player Scoring</h3>
-                    <button class="close-btn" onclick="closeScoringSheet()">×</button>
-                </div>
-                
-                <div style="font-weight: bold; margin-bottom: 10px;">Select up to 7 unique cards (0-12):</div>
-                <div class="card-selector" id="card-selector"></div>
-                
-                <div class="modifier-section">
-                    <div style="font-weight: bold; margin-bottom: 8px;">Modifiers:</div>
-                    <div class="modifier-buttons" id="modifier-buttons">
-                        <button class="modifier-btn" onclick="toggleModifier('+2')">+2</button>
-                        <button class="modifier-btn" onclick="toggleModifier('+4')">+4</button>
-                        <button class="modifier-btn" onclick="toggleModifier('+6')">+6</button>
-                        <button class="modifier-btn" onclick="toggleModifier('+8')">+8</button>
-                        <button class="modifier-btn" onclick="toggleModifier('+10')">+10</button>
-                        <button class="modifier-btn" onclick="toggleModifier('x2')">×2</button>
-                    </div>
-                </div>
-                
-                <div class="current-score" id="score-preview">Round Score: 0<br><span class="unique-count">Unique Cards: 0</span></div>
-                
-                <div class="score-actions">
-                    <button class="btn btn-secondary" onclick="bankCurrentScore()">Bank Score</button>
-                    <button class="btn btn-secondary" onclick="bustCurrentPlayer()">Bust (0)</button>
-                </div>
-            </div>
-            
-            <div class="game-controls">
-                <button id="next-round-btn" class="btn btn-secondary next-round-btn" onclick="nextRound()">Next Round</button>
-                <button id="new-game-btn" class="btn btn-primary" onclick="resetGame()">New Game</button>
-            </div>
-        </div>
-
-        <div id="new-game-dialog" class="confirmation-overlay hidden">
-            <div class="confirmation-dialog">
-                <h3>New Game</h3>
-                <p>Do you want to start a new game with the same players?</p>
-                <div class="confirmation-buttons">
-                    <button class="btn btn-primary" onclick="startNewGameWithSamePlayers()">Yes</button>
-                    <button class="btn btn-secondary" onclick="goToSetup()">No</button>
-                    <button class="btn btn-secondary" onclick="cancelNewGame()">Cancel</button>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
 
-    <script>
-        let players = [];
-        let currentRound = 1;
-        let currentScoringPlayer = -1;
-        const WINNING_SCORE = 200;
+    <div class="card">
+      <div class="card-title">Players</div>
+      <div class="input-row">
+        <input type="text" id="player-name" placeholder="Player name" maxlength="14">
+        <button class="btn btn-accent" onclick="addPlayer()">Add</button>
+      </div>
+      <div id="players-setup"></div>
+      <button id="start-btn" class="btn btn-accent btn-full hidden" onclick="startGame()" style="margin-top:4px">Start Game →</button>
+    </div>
 
-        function addPlayer() {
-            const nameInput = document.getElementById('player-name');
-            const name = nameInput.value.trim();
-            
-            if (name && !players.find(p => p.name === name)) {
-                players.push({
-                    name: name,
-                    totalScore: 0,
-                    roundScores: [],
-                    hasScored: false
-                });
-                nameInput.value = '';
-                updatePlayersSetup();
-            }
-        }
+    <div class="card">
+      <div class="card-title">Rules Quick Ref</div>
+      <div style="font-size:.83rem;color:var(--muted);line-height:1.75">
+        <p>• Collect unique number cards 0–12. Duplicate = <strong style="color:var(--accent)">bust</strong> (0 pts)</p>
+        <p>• Collect all <strong>7 unique cards</strong> = +15 bonus on top</p>
+        <p>• <strong style="color:var(--purple)">×2</strong> doubles your number sum; then flat adds apply</p>
+        <p>• <strong style="color:var(--purple)">+2/+4/+6/+8/+10</strong> add flat points (after ×2)</p>
+        <p>• <strong style="color:var(--blue)">Freeze</strong> forces a target to bank 0 this round</p>
+        <p>• <strong style="color:var(--blue)">Second Chance</strong> saves you from one bust</p>
+        <p>• <strong style="color:var(--blue)">Flip Three</strong> adds a flat +3 to your score</p>
+      </div>
+    </div>
+  </div>
 
-        function removePlayer(index) {
-            players.splice(index, 1);
-            updatePlayersSetup();
-        }
+  <!-- ══ GAME ══ -->
+  <div id="game-section" class="hidden">
 
-        function updatePlayersSetup() {
-            const container = document.getElementById('players-setup');
-            container.innerHTML = '';
-            
-            players.forEach((player, index) => {
-                const div = document.createElement('div');
-                div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-bottom: 10px;';
-                div.innerHTML = `
-                    <span style="font-size: 1.1rem; font-weight: bold;">${player.name}</span>
-                    <button onclick="removePlayer(${index})" style="background: #ff4757; color: white; border: none; border-radius: 5px; padding: 8px 12px; cursor: pointer;">Remove</button>
-                `;
-                container.appendChild(div);
-            });
+    <div id="win-screen" class="card hidden">
+      <div class="win-screen">
+        <div class="win-trophy">🏆</div>
+        <div class="win-name" id="win-name"></div>
+        <div class="win-meta" id="win-meta"></div>
+        <div class="final-scores" id="final-scores"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <button class="btn btn-ghost btn-full" onclick="showNewGameDialog()">New Game</button>
+          <button class="btn btn-accent btn-full" onclick="resetSamePlayers()">Play Again</button>
+        </div>
+      </div>
+    </div>
 
-            document.getElementById('start-game').style.display = players.length >= 2 ? 'block' : 'none';
-        }
+    <div id="active-game">
+      <div class="round-header">
+        <div class="round-pill">Round <span id="current-round">1</span></div>
+        <div style="display:flex;gap:8px">
+          <button id="undo-btn" class="btn btn-ghost btn-sm hidden" onclick="undoLast()">↩ Undo</button>
+          <button class="btn btn-ghost btn-sm" onclick="openEditScores()">✏ Edit</button>
+        </div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="progress-labels"><span>0</span><span id="progress-target">200</span></div>
+      </div>
 
-        function startGame() {
-            if (players.length < 2) return;
-            
-            document.getElementById('setup-section').classList.add('hidden');
-            document.getElementById('game-section').classList.remove('hidden');
-            updateScoreboard();
-        }
+      <div class="scoreboard" id="scoreboard"></div>
 
-        function updateScoreboard() {
-            const scoreboard = document.getElementById('scoreboard');
-            scoreboard.innerHTML = '';
-            
-            if (!players || players.length === 0) return;
-            
-            players.forEach((player, index) => {
-                if (!player) return;
-                
-                const playerCard = document.createElement('div');
-                let className = 'player-score-card';
-                if (player.totalScore >= WINNING_SCORE) {
-                    className += ' winner';
-                } else if (player.hasScored) {
-                    className += ' scored';
-                }
-                playerCard.className = className;
-                playerCard.onclick = () => openScoringSheet(index);
-                
-                playerCard.innerHTML = `
-                    <div class="player-name-small">${player.name || 'Unknown'}</div>
-                    <div class="player-total-small">${player.totalScore || 0}</div>
-                `;
-                
-                scoreboard.appendChild(playerCard);
-            });
-            
-            document.getElementById('current-round').textContent = currentRound;
-        }
+      <!-- SCORING SHEET -->
+      <div id="scoring-sheet" class="card hidden">
+        <div class="sheet-player" id="sheet-player-name"></div>
+        <div id="sc-banner" class="sc-banner hidden">⚡ Second Chance active — next bust will be forgiven</div>
 
-        function openScoringSheet(playerIndex) {
-            if (!players || !players[playerIndex]) {
-                alert('Player not found!');
-                return;
-            }
-            
-            if (players[playerIndex].hasScored) {
-                alert(`${players[playerIndex].name} has already scored this round!`);
-                return;
-            }
-            
-            currentScoringPlayer = playerIndex;
-            document.getElementById('scoring-player-name').textContent = `${players[playerIndex].name} - Round ${currentRound}`;
-            
-            const cardSelector = document.getElementById('card-selector');
-            cardSelector.innerHTML = '';
-            for (let i = 0; i <= 12; i++) {
-                const cardBtn = document.createElement('button');
-                cardBtn.className = 'card-btn';
-                cardBtn.textContent = i;
-                cardBtn.onclick = () => toggleCard(i);
-                cardSelector.appendChild(cardBtn);
-            }
-            
-            document.getElementById('scoring-sheet').classList.remove('hidden');
-            clearScoringSheet();
-        }
+        <div class="section-label">Number Cards (select up to 7 unique)</div>
+        <div class="card-grid" id="card-grid"></div>
 
-        function closeScoringSheet() {
-            document.getElementById('scoring-sheet').classList.add('hidden');
-            currentScoringPlayer = -1;
-        }
+        <div class="section-label">Modifier &amp; Action Cards</div>
+        <div class="mod-grid" id="mod-grid"></div>
 
-        function clearScoringSheet() {
-            document.querySelectorAll('#card-selector .card-btn').forEach(btn => btn.classList.remove('selected'));
-            document.querySelectorAll('#modifier-buttons .modifier-btn').forEach(btn => btn.classList.remove('selected'));
-            updateScorePreview();
-        }
+        <div class="score-display">
+          <div class="score-big" id="score-preview">0</div>
+          <div class="score-sub" id="score-sub">Select cards above</div>
+          <div class="score-new-total" id="score-new-total"></div>
+        </div>
 
-        function toggleCard(cardValue) {
-            const cardSelector = document.getElementById('card-selector');
-            const cardBtn = cardSelector.children[cardValue];
-            
-            const isCurrentlySelected = cardBtn.classList.contains('selected');
-            
-            if (isCurrentlySelected) {
-                cardBtn.classList.remove('selected');
-            } else {
-                const selectedCards = [];
-                document.querySelectorAll('#card-selector .card-btn.selected').forEach(btn => {
-                    selectedCards.push(parseInt(btn.textContent));
-                });
-                
-                if (selectedCards.includes(cardValue)) {
-                    alert(`Card ${cardValue} is already selected! You cannot select the same number twice.`);
-                    return;
-                }
-                
-                cardBtn.classList.add('selected');
-            }
-            
-            updateScorePreview();
-        }
+        <div class="sheet-actions">
+          <button class="btn btn-green" onclick="bankScore()">✓ Bank Score</button>
+          <button class="btn btn-accent" onclick="bustPlayer()">✗ Bust (0 pts)</button>
+        </div>
+        <button class="btn btn-ghost btn-full btn-sm" onclick="closeSheet()">Cancel</button>
+      </div>
 
-        function toggleModifier(modifier) {
-            const modifierBtns = document.querySelectorAll('#modifier-buttons .modifier-btn');
-            let modifierBtn;
-            
-            if (modifier.toLowerCase() === 'x2') {
-                modifierBtn = Array.from(modifierBtns).find(btn => btn.textContent === '×2');
-            } else {
-                modifierBtn = Array.from(modifierBtns).find(btn => btn.textContent === modifier);
-            }
-            
-            if (modifierBtn) {
-                modifierBtn.classList.toggle('selected');
-                updateScorePreview();
-            }
-        }
+      <!-- FREEZE PICKER -->
+      <div id="freeze-picker" class="card hidden">
+        <div class="card-title">Freeze — pick a target</div>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:14px">Who gets forced to bank 0 this round?</p>
+        <div class="freeze-target-list" id="freeze-targets"></div>
+        <button class="btn btn-ghost btn-full btn-sm" onclick="cancelFreeze()">Cancel</button>
+      </div>
 
-        function updateScorePreview() {
-            if (currentScoringPlayer === -1) return;
-            
-            const selectedCards = [];
-            const selectedModifiers = [];
-            
-            document.querySelectorAll('#card-selector .card-btn.selected').forEach(btn => {
-                selectedCards.push(parseInt(btn.textContent));
-            });
-            
-            document.querySelectorAll('#modifier-buttons .modifier-btn.selected').forEach(btn => {
-                let modText = btn.textContent.toLowerCase();
-                if (modText === '×2') modText = 'x2';
-                selectedModifiers.push(modText);
-            });
-            
-            const roundScore = calculateScore(selectedCards, selectedModifiers);
-            const uniqueCards = [...new Set(selectedCards)];
-            const uniqueCount = uniqueCards.length;
-            document.getElementById('score-preview').innerHTML = `Round Score: ${roundScore}<br><span class="unique-count">Unique Cards: ${uniqueCount}</span>`;
-        }
+      <div class="tabs" id="view-tabs">
+        <div class="tab active" onclick="switchTab('game')">Scores</div>
+        <div class="tab" onclick="switchTab('history')">History</div>
+        <div class="tab" onclick="switchTab('stats')">Stats</div>
+      </div>
 
-        function calculateScore(selectedCards, modifiers) {
-            if (selectedCards.length === 0) return 0;
-            
-            const uniqueCards = [...new Set(selectedCards)];
-            
-            let baseScore = selectedCards.reduce((sum, card) => sum + card, 0);
-            let finalScore = baseScore;
-            
-            modifiers.forEach(modifier => {
-                if (modifier.startsWith('+')) {
-                    finalScore += parseInt(modifier.substring(1));
-                }
-            });
-            
-            if (modifiers.includes('x2')) {
-                finalScore = baseScore * 2 + (finalScore - baseScore);
-            }
-            
-            if (uniqueCards.length === 7) {
-                finalScore += 15;
-            }
-            
-            return finalScore;
-        }
+      <div id="history-view" class="card hidden"><div id="history-content"></div></div>
+      <div id="stats-view" class="card hidden"><div id="stats-content"></div></div>
 
-        function bankCurrentScore() {
-            if (currentScoringPlayer === -1) {
-                alert('No player selected for scoring!');
-                return;
-            }
-            
-            if (!players || !players[currentScoringPlayer]) {
-                alert('Player not found!');
-                currentScoringPlayer = -1;
-                return;
-            }
-            
-            const selectedCards = [];
-            const selectedModifiers = [];
-            
-            document.querySelectorAll('#card-selector .card-btn.selected').forEach(btn => {
-                selectedCards.push(parseInt(btn.textContent));
-            });
-            
-            document.querySelectorAll('#modifier-buttons .modifier-btn.selected').forEach(btn => {
-                let modText = btn.textContent.toLowerCase();
-                if (modText === '×2') modText = 'x2';
-                selectedModifiers.push(modText);
-            });
-            
-            const roundScore = calculateScore(selectedCards, selectedModifiers);
-            players[currentScoringPlayer].totalScore = (players[currentScoringPlayer].totalScore || 0) + roundScore;
-            players[currentScoringPlayer].roundScores = players[currentScoringPlayer].roundScores || [];
-            players[currentScoringPlayer].roundScores.push(roundScore);
-            players[currentScoringPlayer].hasScored = true;
-            
-            const playerName = players[currentScoringPlayer].name;
-            const playerTotal = players[currentScoringPlayer].totalScore;
-            
-            closeScoringSheet();
-            updateScoreboard();
-            
-            if (playerTotal >= WINNING_SCORE) {
-                setTimeout(() => {
-                    alert(`🎉 ${playerName} wins with ${playerTotal} points!`);
-                }, 100);
-            }
-        }
+      <div class="game-controls" id="game-controls">
+        <button class="btn btn-ghost" onclick="nextRound()">Next Round →</button>
+        <button class="btn btn-ghost" onclick="showNewGameDialog()">New Game</button>
+        <button class="btn btn-accent" onclick="openEditScores()">✏ Scores</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-        function bustCurrentPlayer() {
-            if (currentScoringPlayer === -1) {
-                alert('No player selected for scoring!');
-                return;
-            }
-            
-            if (!players || !players[currentScoringPlayer]) {
-                alert('Player not found!');
-                currentScoringPlayer = -1;
-                return;
-            }
-            
-            players[currentScoringPlayer].roundScores = players[currentScoringPlayer].roundScores || [];
-            players[currentScoringPlayer].roundScores.push(0);
-            players[currentScoringPlayer].hasScored = true;
-            
-            closeScoringSheet();
-            updateScoreboard();
-        }
+<!-- MODALS -->
+<div id="new-game-modal" class="modal-backdrop hidden">
+  <div class="modal">
+    <h2>New Game</h2>
+    <p>Keep the same players, or start fresh?</p>
+    <div class="modal-btns">
+      <button class="btn btn-accent btn-full" onclick="resetSamePlayers()">Same Players</button>
+      <button class="btn btn-ghost btn-full" onclick="goToSetup()">Change Players</button>
+      <button class="btn btn-ghost btn-full" onclick="closeModal('new-game-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
 
-        function nextRound() {
-            if (!players || players.length === 0) return;
-            
-            const nextBtn = document.getElementById('next-round-btn');
-            nextBtn.classList.add('animating');
-            
-            const animationDiv = document.createElement('div');
-            animationDiv.className = 'next-round-animation';
-            animationDiv.textContent = `Round ${currentRound + 1}`;
-            document.body.appendChild(animationDiv);
-            
-            setTimeout(() => {
-                document.body.removeChild(animationDiv);
-                nextBtn.classList.remove('animating');
-            }, 1500);
-            
-            players.forEach(player => {
-                if (!player) return;
-                if (!player.hasScored) {
-                    player.roundScores.push(0);
-                }
-                player.hasScored = false;
-            });
-            
-            currentRound++;
-            updateScoreboard();
-        }
+<div id="next-round-modal" class="modal-backdrop hidden">
+  <div class="modal">
+    <h2>End Round?</h2>
+    <p id="next-round-msg"></p>
+    <div class="modal-btns">
+      <button class="btn btn-accent btn-full" onclick="confirmNextRound()">Yes, End Round</button>
+      <button class="btn btn-ghost btn-full" onclick="closeModal('next-round-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
 
-        function resetGame() {
-            showNewGameDialog();
-        }
+<div id="edit-scores-modal" class="modal-backdrop hidden">
+  <div class="modal" style="text-align:left">
+    <h2 style="text-align:center;margin-bottom:6px">Edit Scores</h2>
+    <p style="text-align:center">Directly correct any player's total.</p>
+    <div id="edit-scores-rows"></div>
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn btn-accent btn-full" onclick="saveEditedScores()">Save</button>
+      <button class="btn btn-ghost btn-full" onclick="closeModal('edit-scores-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
 
-        function showNewGameDialog() {
-            document.getElementById('new-game-dialog').classList.remove('hidden');
-        }
+<div id="toast" class="toast"></div>
 
-        function startNewGameWithSamePlayers() {
-            players.forEach(player => {
-                player.totalScore = 0;
-                player.roundScores = [];
-                player.hasScored = false;
-            });
-            currentRound = 1;
-            currentScoringPlayer = -1;
-            updateScoreboard();
-            document.getElementById('new-game-dialog').classList.add('hidden');
-        }
+<script>
+let players=[], currentRound=1, scoringIdx=-1, WIN=200;
+let undoStack=[], darkMode=true;
+const MODS=['+2','+4','+6','+8','+10','×2','Freeze','2nd Chance','Flip Three'];
 
-        function goToSetup() {
-            document.getElementById('game-section').classList.add('hidden');
-            document.getElementById('setup-section').classList.remove('hidden');
-            document.getElementById('new-game-dialog').classList.add('hidden');
-            players = [];
-            updatePlayersSetup();
-        }
+/* ── PERSISTENCE ── */
+function save(){try{localStorage.setItem('f7',JSON.stringify({players,currentRound,WIN}));}catch(e){}}
+function load(){
+  try{
+    const s=localStorage.getItem('f7');if(!s)return false;
+    const d=JSON.parse(s);if(!d.players||d.players.length<2)return false;
+    players=d.players;currentRound=d.currentRound||1;WIN=d.WIN||200;return true;
+  }catch(e){return false;}
+}
+function clearSave(){try{localStorage.removeItem('f7');}catch(e){}}
 
-        function cancelNewGame() {
-            document.getElementById('new-game-dialog').classList.add('hidden');
-        }
+/* ── UNDO ── */
+function pushUndo(desc){
+  undoStack.push({desc,state:JSON.stringify({players,currentRound})});
+  if(undoStack.length>12)undoStack.shift();
+  document.getElementById('undo-btn').classList.remove('hidden');
+}
+function undoLast(){
+  if(!undoStack.length)return;
+  const s=undoStack.pop();
+  const d=JSON.parse(s.state);
+  players=d.players;currentRound=d.currentRound;
+  if(!undoStack.length)document.getElementById('undo-btn').classList.add('hidden');
+  // Restore DOM — undo may be rewinding past a win screen
+  document.getElementById('win-screen').classList.add('hidden');
+  document.getElementById('active-game').classList.remove('hidden');
+  renderScoreboard();save();toast('Undone: '+s.desc);
+}
 
-        document.getElementById('player-name').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                addPlayer();
-            }
-        });
-    </script>
+/* ── THEME ── */
+function toggleTheme(){
+  darkMode=!darkMode;
+  const r=document.documentElement.style;
+  if(darkMode){
+    r.setProperty('--bg','#0f0f11');r.setProperty('--surface','#1a1a1f');
+    r.setProperty('--surface2','#242429');r.setProperty('--surface3','#2e2e35');
+    r.setProperty('--border','#3a3a44');r.setProperty('--text','#f0eff6');r.setProperty('--muted','#8a8a99');
+    document.getElementById('theme-btn').textContent='☀';
+  }else{
+    r.setProperty('--bg','#f2f1ee');r.setProperty('--surface','#ffffff');
+    r.setProperty('--surface2','#eeede8');r.setProperty('--surface3','#e4e3de');
+    r.setProperty('--border','#ccc9c0');r.setProperty('--text','#18181f');r.setProperty('--muted','#68687a');
+    document.getElementById('theme-btn').textContent='🌙';
+  }
+}
+
+/* ── WIN TARGET ── */
+function setWinTarget(n){
+  WIN=n;
+  document.getElementById('win-target-input').value=n;
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.toggle('active',+b.textContent===n));
+}
+function updateWinTarget(){
+  const v=+document.getElementById('win-target-input').value||200;
+  WIN=Math.max(50,Math.min(9999,v));
+  document.getElementById('win-target-input').value=WIN;
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.toggle('active',+b.textContent===WIN));
+}
+
+/* ── SETUP ── */
+function addPlayer(){
+  const inp=document.getElementById('player-name');
+  const name=inp.value.trim();
+  if(!name)return;
+  if(players.find(p=>p.name.toLowerCase()===name.toLowerCase())){toast('Name taken!');return;}
+  if(players.length>=8){toast('Max 8 players');return;}
+  players.push({name,total:0,rounds:[],hasScored:false,frozen:false,secondChanceActive:false});
+  inp.value='';renderSetup();inp.focus();
+}
+function removePlayer(i){players.splice(i,1);renderSetup();}
+function movePlayer(i,dir){
+  const j=i+dir;if(j<0||j>=players.length)return;
+  [players[i],players[j]]=[players[j],players[i]];renderSetup();
+}
+function renderSetup(){
+  const c=document.getElementById('players-setup');c.innerHTML='';
+  players.forEach((p,i)=>{
+    const d=document.createElement('div');d.className='player-row';
+    d.innerHTML=`<div style="display:flex;flex-direction:column;gap:2px">
+      <button class="order-btn" onclick="movePlayer(${i},-1)"${i===0?' disabled':''}>▲</button>
+      <button class="order-btn" onclick="movePlayer(${i},1)"${i===players.length-1?' disabled':''}>▼</button>
+    </div>
+    <span class="player-row-name">${esc(p.name)}</span>
+    <button class="btn btn-ghost btn-sm" onclick="removePlayer(${i})">Remove</button>`;
+    c.appendChild(d);
+  });
+  document.getElementById('start-btn').classList.toggle('hidden',players.length<2);
+}
+
+function startGame(){
+  if(players.length<2)return;
+  document.getElementById('setup-section').classList.add('hidden');
+  document.getElementById('game-section').classList.remove('hidden');
+  document.getElementById('progress-target').textContent=WIN;
+  renderScoreboard();save();
+}
+
+/* ── SCOREBOARD ── */
+function renderScoreboard(){
+  const sb=document.getElementById('scoreboard');sb.innerHTML='';
+  if(!players.length)return;
+  document.getElementById('current-round').textContent=currentRound;
+  const maxScore=Math.max(...players.map(p=>p.total),1);
+  document.getElementById('progress-fill').style.width=Math.min(100,maxScore/WIN*100)+'%';
+  document.getElementById('progress-target').textContent=WIN;
+
+  const leader=players.reduce((a,b)=>b.total>a.total?b:a,players[0]);
+
+  players.forEach((p,i)=>{
+    const card=document.createElement('div');
+    const isLeader=p===leader&&p.total>0&&players.filter(x=>x.total===p.total).length===1;
+    const canScore=!p.hasScored&&!p.frozen;
+    let cls='score-card';
+    const roundStillOpen=players.some(x=>!x.hasScored&&!x.frozen);
+    const midRoundOver=p.total>=WIN&&roundStillOpen;
+    if(p.total>=WIN&&!midRoundOver)cls+=' winner-card';
+    else if(midRoundOver&&p.hasScored)cls+=' scored';  // show as done, orange badge communicates the rest
+    else if(p.hasScored)cls+=' scored';
+    else if(p.frozen)cls+=' frozen';
+    else if(isLeader)cls+=' leader';
+    if(canScore)cls+=' selectable';
+    card.className=cls;
+    if(canScore)card.onclick=()=>openSheet(i);
+
+    const need=WIN-p.total;
+    const needEl=need>0&&p.total<WIN?`<div class="sc-need${need<=30?' close':''}">${need} to win</div>`:'';
+
+    let badge='';
+    if(p.total>=WIN&&p.hasScored)badge=`<span class="sc-badge badge-winner">🏆 ${p.total}</span>`;
+    else if(p.total>=WIN&&!p.hasScored)badge=`<span class="sc-badge" style="background:#2a1800;color:#f97316;font-size:9px">🔥 ${p.total}</span>`;
+    else if(p.frozen)badge=`<span class="sc-badge badge-frozen">❄</span>`;
+    else if(p.hasScored)badge=`<span class="sc-badge badge-done">✓</span>`;
+    else if(isLeader)badge=`<span class="sc-badge badge-lead">★ lead</span>`;
+
+    const busts=p.rounds.filter(r=>r.busted).length;
+    const bustPips=busts?`<div class="bust-pips">${'<span class="bust-pip"></span>'.repeat(Math.min(busts,6))}${busts>6?`<span style="font-size:9px;color:var(--accent)">+${busts-6}</span>`:''}</div>`:'';
+
+    card.innerHTML=`${badge}
+      <div class="sc-name">${esc(p.name)}</div>
+      <div class="sc-score">${p.total}</div>
+      ${needEl}${bustPips}
+      <div class="sc-sparkline">${sparkline(p)}</div>`;
+    sb.appendChild(card);
+  });
+}
+
+function sparkline(p){
+  if(p.rounds.length<2)return'';
+  const pts=[];let cum=0;
+  p.rounds.forEach(r=>{cum+=r.score;pts.push(cum);});
+  const w=90,h=20;
+  const mx=Math.max(...pts);
+  if(mx<=0)return''; // all busts — nothing meaningful to draw
+  const xs=pts.map((_,i)=>i/(pts.length-1)*w);
+  const ys=pts.map(v=>h-2-(v/mx)*(h-4));
+  const path='M'+xs.map((x,i)=>`${x.toFixed(1)},${ys[i].toFixed(1)}`).join('L');
+  return`<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}"><path d="${path}" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${xs[xs.length-1].toFixed(1)}" cy="${ys[ys.length-1].toFixed(1)}" r="2" fill="var(--accent)"/></svg>`;
+}
+
+/* ── SCORING SHEET ── */
+function openSheet(idx){
+  if(players[idx].hasScored||players[idx].frozen)return;
+  scoringIdx=idx;
+  const p=players[idx];
+  document.getElementById('sheet-player-name').textContent=`${p.name} — Round ${currentRound}`;
+  document.getElementById('sc-banner').classList.toggle('hidden',!p.secondChanceActive);
+
+  const grid=document.getElementById('card-grid');grid.innerHTML='';
+  for(let n=0;n<=12;n++){
+    const b=document.createElement('button');b.className='num-card';b.textContent=n;b.dataset.val=n;
+    b.onclick=()=>toggleNum(b);grid.appendChild(b);
+  }
+  const mg=document.getElementById('mod-grid');mg.innerHTML='';
+  MODS.forEach(m=>{
+    const b=document.createElement('button');b.className='mod-btn';b.textContent=m;b.dataset.mod=m;
+    b.onclick=()=>toggleMod(b,m);mg.appendChild(b);
+  });
+
+  updatePreview();
+  document.getElementById('scoring-sheet').classList.remove('hidden');
+  document.getElementById('game-controls').classList.add('hidden');
+  document.getElementById('view-tabs').classList.add('hidden');
+  document.getElementById('undo-btn').classList.add('hidden');
+}
+function closeSheet(){
+  scoringIdx=-1;
+  document.getElementById('scoring-sheet').classList.add('hidden');
+  document.getElementById('freeze-picker').classList.add('hidden');
+  document.getElementById('game-controls').classList.remove('hidden');
+  document.getElementById('view-tabs').classList.remove('hidden');
+  if(undoStack.length)document.getElementById('undo-btn').classList.remove('hidden');
+}
+
+function toggleNum(btn){
+  if(btn.classList.contains('selected')){btn.classList.remove('selected');updatePreview();return;}
+  const count=document.querySelectorAll('#card-grid .num-card.selected').length;
+  if(count>=7){toast('Max 7 unique cards!');return;}
+  btn.classList.add('selected');
+  if(navigator.vibrate)navigator.vibrate(20);
+  updatePreview();
+}
+function toggleMod(btn,mod){
+  const isAction=['Freeze','2nd Chance','Flip Three'].includes(mod);
+  // Freeze: don't allow toggling off then back on once a target has been frozen
+  if(mod==='Freeze'){
+    if(btn.classList.contains('freeze-used'))return; // already applied this turn
+    if(btn.classList.contains('action-selected')){
+      // Deselecting before a target was chosen — just remove it
+      btn.classList.remove('action-selected');
+      updatePreview();return;
+    }
+    btn.classList.add('action-selected');
+    showFreezeTarget();
+    return;
+  }
+  btn.classList.toggle(isAction?'action-selected':'selected');
+  updatePreview();
+}
+function getSelected(){
+  const nums=[...document.querySelectorAll('#card-grid .num-card.selected')].map(b=>+b.dataset.val);
+  let mods=[...document.querySelectorAll('#mod-grid .mod-btn.selected,#mod-grid .mod-btn.action-selected')].map(b=>b.dataset.mod);
+  // Only include Freeze in mods if it was actually applied to a target
+  const freezeBtn=[...document.querySelectorAll('#mod-grid .mod-btn')].find(b=>b.dataset.mod==='Freeze');
+  if(freezeBtn&&freezeBtn.classList.contains('action-selected')&&!freezeBtn.classList.contains('freeze-used')){
+    mods=mods.filter(m=>m!=='Freeze');
+  }
+  return{nums,mods};
+}
+function calcScore(nums,mods){
+  if(!nums.length)return 0;
+  const base=nums.reduce((a,b)=>a+b,0);
+  let score=mods.includes('×2')?base*2:base;
+  mods.forEach(m=>{if(m.startsWith('+'))score+=+m.slice(1);});
+  if(mods.includes('Flip Three'))score+=3;
+  if(nums.length===7)score+=15;
+  return score;
+}
+function updatePreview(){
+  if(scoringIdx<0)return;
+  const{nums,mods}=getSelected();
+  const score=calcScore(nums,mods);
+  document.getElementById('score-preview').textContent=score;
+  const p=players[scoringIdx];
+  document.getElementById('score-new-total').textContent=nums.length?`New total: ${p.total+score}`:'';
+  const parts=[];
+  if(nums.length){
+    const sum=nums.reduce((a,b)=>a+b,0);
+    parts.push(`sum ${sum}`);
+    if(mods.includes('×2'))parts.push(`×2 = ${sum*2}`);
+    mods.filter(m=>m.startsWith('+')).forEach(m=>parts.push(m));
+    if(mods.includes('Flip Three'))parts.push('+3');
+    if(nums.length===7)parts.push('+15 Flip7!');
+  }
+  document.getElementById('score-sub').textContent=parts.join(' → ')||'Select cards above';
+}
+
+function bankScore(){
+  if(scoringIdx<0)return;
+  const{nums,mods}=getSelected();
+  // Prevent banking with no cards selected — would record a silent 0 that looks scored but isn't a bust
+  if(nums.length===0){toast('Select at least one card, or use Bust.');return;}
+  const score=calcScore(nums,mods);
+  const p=players[scoringIdx];
+  pushUndo(`${p.name} banked ${score}`);
+  p.total+=score;
+  p.rounds.push({round:currentRound,score,cards:nums.slice(),mods:mods.slice(),busted:false});
+  p.hasScored=true;
+  // Only update secondChanceActive if the 2nd Chance card was played this turn.
+  // If it wasn't played, leave the flag alone so a previously-earned SC carries forward.
+  if(mods.includes('2nd Chance'))p.secondChanceActive=true;
+  closeSheet();renderScoreboard();save();
+  if(p.total>=WIN){
+    toast(`${p.name} crossed ${WIN}! Finish the round first.`,3000);
+  }else{
+    toast(`${p.name}: +${score} → ${p.total}`);
+  }
+  // Only resolve the game once every player has had their turn this round
+  const roundComplete=players.every(p=>p.hasScored||p.frozen);
+  if(roundComplete){
+    const won=checkWin();
+    if(!won)toast('Round complete — tap Next Round to continue.',3000);
+  }
+}
+function bustPlayer(){
+  if(scoringIdx<0)return;
+  const p=players[scoringIdx];
+  if(p.secondChanceActive){
+    p.secondChanceActive=false;
+    document.getElementById('sc-banner').classList.add('hidden');
+    if(navigator.vibrate)navigator.vibrate([40,30,40]);
+    toast(`${p.name}'s Second Chance used! Bank your score now.`);
+    return;
+  }
+  pushUndo(`${p.name} busted`);
+  p.rounds.push({round:currentRound,score:0,cards:[],mods:[],busted:true});
+  p.hasScored=true;
+  if(navigator.vibrate)navigator.vibrate([80,40,80]);
+  closeSheet();renderScoreboard();save();
+  toast(`${p.name} busted! 0 pts.`);
+  // If this bust completed the round, resolve now
+  const roundComplete=players.every(q=>q.hasScored||q.frozen);
+  if(roundComplete){
+    const won=checkWin();
+    if(!won)toast('Round complete — tap Next Round to continue.',3000);
+  }
+}
+
+/* ── FREEZE ── */
+function showFreezeTarget(){
+  const targets=players.filter((_,i)=>i!==scoringIdx&&!players[i].hasScored&&!players[i].frozen);
+  if(!targets.length){
+    const fb=[...document.querySelectorAll('#mod-grid .mod-btn')].find(b=>b.dataset.mod==='Freeze');
+    if(fb)fb.classList.remove('action-selected');
+    toast('No valid freeze targets');return;
+  }
+  const list=document.getElementById('freeze-targets');list.innerHTML='';
+  targets.forEach(p=>{
+    const d=document.createElement('div');d.className='freeze-target';d.textContent=p.name;
+    d.onclick=()=>applyFreeze(p);list.appendChild(d);
+  });
+  document.getElementById('freeze-picker').classList.remove('hidden');
+  document.getElementById('scoring-sheet').classList.add('hidden');
+}
+function applyFreeze(target){
+  pushUndo(`${target.name} frozen`);
+  target.frozen=true;target.hasScored=true;
+  target.rounds.push({round:currentRound,score:0,cards:[],mods:[],frozen:true});
+  // Mark the freeze button as used so it can't be re-triggered this turn
+  const fb=[...document.querySelectorAll('#mod-grid .mod-btn')].find(b=>b.dataset.mod==='Freeze');
+  if(fb){fb.classList.add('action-selected','freeze-used');fb.style.opacity='.5';fb.style.cursor='default';}
+  document.getElementById('freeze-picker').classList.add('hidden');
+  document.getElementById('scoring-sheet').classList.remove('hidden');
+  renderScoreboard();save();toast(`${target.name} is frozen!`);
+  const roundComplete=players.every(q=>q.hasScored||q.frozen);
+  if(roundComplete){
+    const won=checkWin();
+    if(!won)toast('Round complete — tap Next Round to continue.',3000);
+  }
+}
+function cancelFreeze(){
+  const fb=[...document.querySelectorAll('#mod-grid .mod-btn')].find(b=>b.dataset.mod==='Freeze');
+  if(fb)fb.classList.remove('action-selected');
+  document.getElementById('freeze-picker').classList.add('hidden');
+  document.getElementById('scoring-sheet').classList.remove('hidden');
+  updatePreview();
+}
+
+/* ── WIN CHECK ── */
+function checkWin(){
+  const winners=players.filter(p=>p.total>=WIN);
+  if(!winners.length)return false;
+  winners.sort((a,b)=>b.total-a.total);
+  const topScore=winners[0].total;
+  const tied=winners.filter(p=>p.total===topScore);
+  if(tied.length>1){
+    // Genuine tie — show tie screen
+    document.getElementById('active-game').classList.add('hidden');
+    document.getElementById('win-screen').classList.remove('hidden');
+    document.getElementById('win-name').textContent=tied.map(p=>p.name).join(' & ');
+    document.getElementById('win-meta').textContent=`Tie at ${topScore} pts · ${currentRound} rounds played`;
+  }else{
+    const winner=winners[0];
+    document.getElementById('active-game').classList.add('hidden');
+    document.getElementById('win-screen').classList.remove('hidden');
+    document.getElementById('win-name').textContent=winner.name;
+    document.getElementById('win-meta').textContent=`${winner.total} pts · ${currentRound} rounds played`;
+  }
+  const sorted=[...players].sort((a,b)=>b.total-a.total);
+  const medals=['🥇','🥈','🥉'];
+  document.getElementById('final-scores').innerHTML=sorted.map((p,i)=>`
+    <div class="final-row${i===0?' first':''}">
+      <div class="final-rank">${medals[i]||`#${i+1}`}</div>
+      <div class="final-name">${esc(p.name)}</div>
+      <div class="final-score">${p.total}</div>
+    </div>`).join('');
+  return true;
+}
+
+/* ── ROUNDS ── */
+function nextRound(){
+  const unscored=players.filter(p=>!p.hasScored&&!p.frozen);
+  if(unscored.length){
+    document.getElementById('next-round-msg').textContent=
+      `${unscored.map(p=>p.name).join(', ')} haven't scored yet. They'll receive 0 this round.`;
+    document.getElementById('next-round-modal').classList.remove('hidden');
+  }else confirmNextRound();
+}
+function confirmNextRound(){
+  closeModal('next-round-modal');
+  pushUndo(`End of round ${currentRound}`);
+  players.forEach(p=>{
+    if(!p.hasScored)p.rounds.push({round:currentRound,score:0,skipped:true});
+    p.hasScored=false;p.frozen=false;
+  });
+  // Check for a winner before advancing — highest score among those at or over WIN
+  if(checkWin()){save();return;}
+  currentRound++;
+  renderScoreboard();save();switchTab('game');
+  toast(`Round ${currentRound} started!`);
+}
+
+/* ── EDIT SCORES ── */
+function openEditScores(){
+  document.getElementById('edit-scores-rows').innerHTML=players.map((p,i)=>`
+    <div class="score-edit-row">
+      <span class="score-edit-name">${esc(p.name)}</span>
+      <input type="number" id="es-${i}" value="${p.total}" min="0" max="9999" style="width:80px">
+    </div>`).join('');
+  document.getElementById('edit-scores-modal').classList.remove('hidden');
+}
+function saveEditedScores(){
+  pushUndo('Score edit');
+  players.forEach((p,i)=>{p.total=Math.max(0,+document.getElementById(`es-${i}`).value||0);});
+  closeModal('edit-scores-modal');
+  renderScoreboard();save();toast('Scores updated');
+  // An edit might have pushed someone above WIN
+  const roundDone=players.every(p=>p.hasScored||p.frozen);
+  if(roundDone)checkWin();
+}
+
+/* ── TABS ── */
+function switchTab(tab){
+  const ids=['game','history','stats'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',ids[i]===tab));
+  document.getElementById('history-view').classList.toggle('hidden',tab!=='history');
+  document.getElementById('stats-view').classList.toggle('hidden',tab!=='stats');
+  if(tab==='history')renderHistory();
+  if(tab==='stats')renderStats();
+}
+
+/* ── HISTORY ── */
+function renderHistory(){
+  const c=document.getElementById('history-content');
+  if(players.every(p=>!p.rounds.length)){c.innerHTML='<p style="color:var(--muted);text-align:center;padding:20px;font-size:.88rem">No rounds yet.</p>';return;}
+  // Use the actual highest round number recorded, not currentRound-1,
+  // so the final winning round always appears even if currentRound wasn't incremented
+  const maxRound=Math.max(...players.flatMap(p=>p.rounds.map(r=>r.round)),0);
+  const mvps={};
+  for(let r=1;r<=maxRound;r++){
+    let best=-1,bestP=null;
+    players.forEach(p=>{const rnd=p.rounds.find(x=>x.round===r);if(rnd&&rnd.score>best){best=rnd.score;bestP=p.name;}});
+    if(best>0)mvps[r]=bestP;
+  }
+  let html=`<div style="overflow-x:auto"><table class="history-table"><thead><tr><th>#</th>${players.map(p=>`<th>${esc(p.name)}</th>`).join('')}</tr></thead><tbody>`;
+  for(let r=1;r<=maxRound;r++){
+    html+=`<tr><td style="color:var(--muted)">${r}</td>`;
+    players.forEach(p=>{
+      const rnd=p.rounds.find(x=>x.round===r);
+      if(!rnd){html+=`<td style="color:var(--muted)">—</td>`;return;}
+      if(rnd.busted){html+=`<td style="color:var(--accent)">BUST</td>`;return;}
+      if(rnd.frozen){html+=`<td style="color:var(--blue)">❄</td>`;return;}
+      if(rnd.skipped){html+=`<td style="color:var(--muted)">—</td>`;return;}
+      const mvp=mvps[r]===p.name;
+      html+=`<td${mvp?' style="color:var(--gold);font-weight:700"':''}>${mvp?'★ ':''}${rnd.score}</td>`;
+    });
+    html+=`</tr>`;
+  }
+  html+=`</tbody><tfoot><tr class="total-row"><td>∑</td>${players.map(p=>`<td>${p.total}</td>`).join('')}</tr></tfoot></table></div>`;
+  c.innerHTML=html;
+}
+
+/* ── STATS ── */
+function renderStats(){
+  const c=document.getElementById('stats-content');
+  const totalRounds=currentRound-1;
+  if(!totalRounds){c.innerHTML='<p style="color:var(--muted);text-align:center;padding:20px;font-size:.88rem">Complete at least one round to see stats.</p>';return;}
+
+  const allBusts=players.reduce((a,p)=>a+p.rounds.filter(r=>r.busted).length,0);
+  const mvpCount={};
+  for(let r=1;r<currentRound;r++){
+    let best=-1,bp=null;
+    players.forEach(p=>{const rnd=p.rounds.find(x=>x.round===r);if(rnd&&rnd.score>best){best=rnd.score;bp=p.name;}});
+    if(best>0&&bp)mvpCount[bp]=(mvpCount[bp]||0)+1;
+  }
+  const topMvp=Object.entries(mvpCount).sort((a,b)=>b[1]-a[1])[0];
+  const leader=players.reduce((a,b)=>b.total>a.total?b:a,players[0]);
+
+  let html=`<div class="stats-grid">
+    <div class="stat-box"><div class="stat-val">${totalRounds}</div><div class="stat-label">Rounds</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent)">${allBusts}</div><div class="stat-label">Total Busts</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--gold);font-size:1rem">${esc(leader.name)}</div><div class="stat-label">Leading</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--gold);font-size:1rem">${topMvp?esc(topMvp[0])+'<div style="font-size:.75rem">×'+topMvp[1]+'</div>':'—'}</div><div class="stat-label">Round Wins</div></div>
+  </div>
+  <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px">Per Player</div>`;
+
+  players.forEach(p=>{
+    const scored=p.rounds.filter(r=>!r.busted&&!r.frozen&&!r.skipped);
+    const busts=p.rounds.filter(r=>r.busted).length;
+    const avg=scored.length?Math.round(scored.reduce((a,r)=>a+r.score,0)/scored.length):0;
+    const best=scored.length?Math.max(...scored.map(r=>r.score)):0;
+    const bustPct=p.rounds.length?Math.round(busts/p.rounds.length*100):0;
+    const streak=calcStreak(p);
+    html+=`<div class="player-stats-row">
+      <div class="psr-name">${esc(p.name)}</div>
+      <div class="psr-grid">
+        <div><div class="psr-val">${p.total}</div><div class="psr-lbl">Total</div></div>
+        <div><div class="psr-val">${avg}</div><div class="psr-lbl">Avg</div></div>
+        <div><div class="psr-val">${best}</div><div class="psr-lbl">Best</div></div>
+        <div><div class="psr-val" style="color:var(--accent)">${bustPct}%</div><div class="psr-lbl">Bust %</div></div>
+      </div>
+      ${streak?`<div style="font-size:.75rem;color:var(--muted);margin-top:6px">${streak}</div>`:''}
+    </div>`;
+  });
+  c.innerHTML=html;
+}
+
+function calcStreak(p){
+  if(p.rounds.length<2)return'';
+  const recent=[...p.rounds].reverse();
+  let busts=0,wins=0;
+  for(const r of recent){
+    // frozen/skipped rounds are neutral — don't count toward either streak, just skip them
+    if(r.frozen||r.skipped)continue;
+    if(r.busted){
+      if(wins>0)break;
+      busts++;
+    }else{
+      if(busts>0)break;
+      wins++;
+    }
+  }
+  if(busts>=2)return`🔥 ${busts}-round bust streak`;
+  if(wins>=3)return`⚡ ${wins}-round scoring streak`;
+  return'';
+}
+
+/* ── GAME LIFECYCLE ── */
+function showNewGameDialog(){document.getElementById('new-game-modal').classList.remove('hidden');}
+function resetSamePlayers(){
+  closeModal('new-game-modal');
+  players.forEach(p=>{p.total=0;p.rounds=[];p.hasScored=false;p.frozen=false;p.secondChanceActive=false;});
+  currentRound=1;scoringIdx=-1;undoStack=[];
+  document.getElementById('undo-btn').classList.add('hidden');
+  document.getElementById('win-screen').classList.add('hidden');
+  document.getElementById('active-game').classList.remove('hidden');
+  closeSheet();renderScoreboard();save();switchTab('game');toast('New game!');
+}
+function goToSetup(){
+  closeModal('new-game-modal');
+  players=[];currentRound=1;scoringIdx=-1;undoStack=[];
+  clearSave();
+  document.getElementById('game-section').classList.add('hidden');
+  document.getElementById('setup-section').classList.remove('hidden');
+  document.getElementById('win-screen').classList.add('hidden');
+  document.getElementById('active-game').classList.remove('hidden');
+  renderSetup();
+}
+function closeModal(id){document.getElementById(id).classList.add('hidden');}
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function toast(msg,dur=2400){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+/* ── BOOT ── */
+document.getElementById('player-name').addEventListener('keydown',e=>{if(e.key==='Enter')addPlayer();});
+if(load()){
+  document.getElementById('setup-section').classList.add('hidden');
+  document.getElementById('game-section').classList.remove('hidden');
+  document.getElementById('progress-target').textContent=WIN;
+  document.getElementById('win-target-input').value=WIN;
+  renderScoreboard();
+  toast('Game resumed',1800);
+}
+</script>
 </body>
 </html>
