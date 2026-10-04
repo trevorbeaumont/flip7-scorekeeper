@@ -10,7 +10,11 @@ const MODS = [{id:'+2',v:2},{id:'+4',v:4},{id:'+6',v:6},{id:'+8',v:8},{id:'+10',
 const PRESETS = [100,200,300,500];
 const MAX_PLAYERS = 8;
 const FLIP7_BONUS = 15;
-const K = {state:'flip7.state.v2', undo:'flip7.undo.v2', log:'flip7.games.v1', prefs:'flip7.prefs.v1', legacy:'f7'};
+const K = {state:'flip7.state.v2', undo:'flip7.undo.v2', prefs:'flip7.prefs.v1', legacy:'f7'};
+// Keys from earlier versions that held player names or game history. Always removed.
+const RETIRED_KEYS = ['flip7.games.v1'];
+// An unfinished game is resumed only if it was touched recently; older ones are discarded.
+const RESUME_WINDOW_MS = 12 * 60 * 60 * 1000;
 
 const ICONS = {
   undo:'<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
@@ -74,13 +78,31 @@ function migrateLegacy(){
   return {phase:'game', gameId:uid(), target:d.WIN || 200, players, firstDealer:0, rounds, startedAt:Date.now()};
 }
 
+/* Privacy: the app only remembers the game in progress. Names, finished games and
+ * history are never kept, so opening the app on a shared phone starts fresh. */
+RETIRED_KEYS.forEach(k => store.del(k));
+const prefs = Object.assign({theme:'system', order:'seat', entry:'cards'}, store.get(K.prefs, {}));
+delete prefs.recent;  // recent player names from earlier versions
+store.set(K.prefs, prefs);
+
 let S = store.get(K.state, null);
-if (!validState(S)) S = migrateLegacy() || newState();
-let undoStack = store.get(K.undo, []);
+if (!validState(S)) S = migrateLegacy();
+if (!resumable(S)) S = newState(undefined, validState(S) ? S.target : 200);
+let undoStack = resumable(store.get(K.state, null)) ? store.get(K.undo, []) : [];
 if (!Array.isArray(undoStack)) undoStack = [];
-let gameLog = store.get(K.log, []);
-if (!Array.isArray(gameLog)) gameLog = [];
-const prefs = Object.assign({theme:'system', order:'seat', entry:'cards', recent:[]}, store.get(K.prefs, {}));
+
+/** Only an unfinished, recently played game comes back on open. */
+function resumable(s){
+  if (!validState(s) || s.phase !== 'game' || !s.players.length) return false;
+  if (s.updatedAt && Date.now() - s.updatedAt > RESUME_WINDOW_MS) return false;
+  const last = s.rounds[s.rounds.length - 1];
+  if (!last) return true;
+  // A finished game (complete last round with a single leader at or past the target) is not resumed.
+  const done = s.players.every(p => last.entries[p.id]);
+  const totals = s.players.map(p => s.rounds.reduce((a, r) => a + (r.entries[p.id] ? r.entries[p.id].score : 0), 0));
+  const max = Math.max(...totals);
+  return !(done && (max >= s.target || s.ended) && totals.filter(t => t === max).length === 1);
+}
 const ui = {tab:'board', sheet:null};
 
 /* ───────────────────────── Derived game data ───────────────────────── */
@@ -136,26 +158,11 @@ function playerStats(p){
 
 /* ───────────────────────── Persistence & undo ───────────────────────── */
 function persist(){
+  S.updatedAt = Date.now();
   store.set(K.state, S);
   store.set(K.undo, undoStack);
-  syncLog();
 }
 function savePrefs(){ store.set(K.prefs, prefs); }
-
-/** Keep the finished-games log consistent with the current game (handles undo after a win). */
-function syncLog(){
-  const i = gameLog.findIndex(g => g.id === S.gameId);
-  const o = S.phase === 'game' ? outcome() : null;
-  if (o && o.finished){
-    const rec = {
-      id:S.gameId, date:Date.now(), rounds:S.rounds.length, target:S.target,
-      winner:o.top[0].name, players:S.players.map(p => ({name:p.name, total:total(p.id)})).sort((a, b) => b.total - a.total),
-    };
-    if (i >= 0) gameLog[i] = {...rec, date:gameLog[i].date}; else gameLog.unshift(rec);
-  } else if (i >= 0) gameLog.splice(i, 1);
-  gameLog = gameLog.slice(0, 50);
-  store.set(K.log, gameLog);
-}
 
 function commit(desc, mutate){
   undoStack.push({desc, s:JSON.stringify(S)});
@@ -242,8 +249,6 @@ function render(){
 /* ───────────────────────── Render: setup ───────────────────────── */
 function viewSetup(){
   const n = S.players.length;
-  const taken = new Set(S.players.map(p => p.name.toLowerCase()));
-  const recent = prefs.recent.filter(r => !taken.has(r.toLowerCase())).slice(0, 10);
   const custom = !PRESETS.includes(S.target);
   return `
   <section class="hero">
@@ -257,8 +262,6 @@ function viewSetup(){
       <input id="name-input" class="text-input" placeholder="Add a player…" maxlength="16" enterkeyhint="done" autocapitalize="words" ${n >= MAX_PLAYERS ? 'disabled' : ''}>
       <button class="btn btn-primary" type="submit" ${n >= MAX_PLAYERS ? 'disabled' : ''}>Add</button>
     </form>
-    ${recent.length && n < MAX_PLAYERS ? `<div class="chips"><span class="chips-label">Recent</span>${recent.map(r =>
-      `<button class="chip" data-action="add-recent" data-name="${esc(r)}">+ ${esc(r)}</button>`).join('')}</div>` : ''}
     ${n ? `<ol class="seat-list">${S.players.map((p, i) => `
       <li class="seat">
         ${avatar(p)}
@@ -285,7 +288,6 @@ function viewSetup(){
   </div>
 
   ${rulesCard()}
-  ${gameLog.length ? `<div class="card"><div class="card-title">Past games</div>${recordsHtml(3)}</div>` : ''}
 
   <div class="sticky-cta"><div class="inner">
     <button class="btn btn-primary btn-lg btn-block" data-action="start" ${n < 2 ? 'disabled' : ''}>
@@ -500,22 +502,7 @@ function viewStats(){
         <td class="${s.flip7s ? 'gold' : ''}">${s.flip7s}</td></tr>`).join('')}</tbody>
     </table>
     <p class="legend-note">Avg counts only rounds where the player banked points.</p>
-  </div>` : ''}
-  <div class="card">
-    <div class="card-title">All-time ${gameLog.length ? `<button class="btn-link" data-action="clear-log">Clear</button>` : ''}</div>
-    ${gameLog.length ? recordsHtml(10) : '<div class="empty">Finished games will be saved here.</div>'}
-  </div>`;
-}
-
-function recordsHtml(limit){
-  const wins = {};
-  gameLog.forEach(g => { wins[g.winner] = (wins[g.winner] || 0) + 1; });
-  const winList = Object.entries(wins).sort((a, b) => b[1] - a[1]).slice(0, 8);
-  const fmt = d => new Date(d).toLocaleDateString(undefined, {month:'short', day:'numeric'});
-  return `<div class="wins">${winList.map(([n, w]) => `<span class="chip">🏆 ${esc(n)} <b>${w}</b></span>`).join('')}</div>
-    <div class="records">${gameLog.slice(0, limit).map(g => `<div class="rec">
-      <div class="main"><b>${esc(g.winner)} won</b><span>${fmt(g.date)} · ${plural(g.rounds, 'round')} · ${g.players.map(p => esc(p.name)).join(', ')}</span></div>
-      <span class="score">${g.players[0].total}</span></div>`).join('')}</div>`;
+  </div>` : ''}`;
 }
 
 /* ───────────────────────── Chart ───────────────────────── */
@@ -754,9 +741,6 @@ function addPlayer(name){
 function startGame(){
   if (S.players.length < 2) return;
   S.firstDealer = Math.min(S.firstDealer, S.players.length - 1);
-  const names = S.players.map(p => p.name);
-  prefs.recent = [...names, ...prefs.recent.filter(r => !names.some(n => n.toLowerCase() === r.toLowerCase()))].slice(0, 20);
-  savePrefs();
   undoStack = [];
   S.phase = 'game'; S.rounds = [{entries:{}}]; S.startedAt = Date.now(); S.gameId = uid();
   ui.tab = 'board';
@@ -834,6 +818,9 @@ function renderMenu(){
         <button class="menu-item" data-action="new-players">${ic('users')} Change players</button>
         <button class="menu-item danger" data-action="end-game">${ic('flag')} End game now</button>
       </div>` : ''}
+      <div class="menu-group menu-list">
+        <button class="menu-item danger" data-action="clear-all">${ic('trash')} Clear everything <small>Nothing is kept after a game</small></button>
+      </div>
       ${rulesCard()}
     </div>
   </div>`;
@@ -846,7 +833,6 @@ const actions = {
   'close-menu'(){ closeDialog('menu'); },
   tab(el){ ui.tab = el.dataset.tab; render(); window.scrollTo(0, 0); },
 
-  'add-recent'(el){ if (addPlayer(el.dataset.name)) render(); },
   'set-dealer'(el){ S.firstDealer = +el.dataset.i; persist(); render(); },
   move(el){
     const i = +el.dataset.i, j = i + +el.dataset.dir;
@@ -941,10 +927,14 @@ const actions = {
     if (!outcome().finished) toast('It\'s a tie. Play one more round to settle it.', 3200);
   },
   share,
-  async 'clear-log'(){
-    if (!await confirmBox({title:'Clear all-time records?', body:'This removes the saved results of finished games.', ok:'Clear', danger:true})) return;
-    gameLog = [];
+  async 'clear-all'(){
+    closeDialog('menu');
+    if (!await confirmBox({title:'Clear everything?', body:'Removes all players and scores from this device. The app starts fresh.', ok:'Clear', danger:true})) return;
+    [K.state, K.undo, K.legacy, ...RETIRED_KEYS].forEach(k => store.del(k));
+    S = newState(); undoStack = []; ui.tab = 'board';
     persist(); render();
+    window.scrollTo(0, 0);
+    toast('All cleared');
   },
 
   theme(el){ prefs.theme = el.dataset.v; savePrefs(); applyTheme(); renderMenu(); },
