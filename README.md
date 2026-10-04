@@ -10,7 +10,8 @@ A fast, offline score keeper for the [Flip 7](https://boardgamegeek.com/boardgam
 - **Dealer rotation:** you pick who deals first, and the dealer moves one seat each round.
 - **Correct endgame:** the game ends after the round in which someone reaches the target. A tie at the top means everyone plays another round.
 - **Fix anything:** tap any cell in History to re-score that round, and undo works for every action.
-- **Stats:** a race chart, per-player averages, best round, bust rate, Flip 7 count, and an all-time win record.
+- **Stats:** a race chart, per-player averages, best round, bust rate and Flip 7 count for the current game.
+- **Private by design:** nothing is kept after a game. No saved names, no past games, no win records. Only an unfinished game from the last 12 hours is resumed. Anything older, or already finished, is wiped, so the app opens fresh. *Clear everything* in the menu wipes it on demand.
 - **Installable and offline:** includes a manifest, service worker and icons. It also keeps the screen awake during a game.
 - Light and dark themes (follows the system by default), sized for phones, with safe-area support.
 
